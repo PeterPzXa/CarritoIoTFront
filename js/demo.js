@@ -161,12 +161,14 @@ function attachWS() {
   socket.on("connect", () => wsBadge.textContent = "WS: Conectado");
   socket.on("disconnect", () => wsBadge.textContent = "WS: Desconectado");
 
-  onDemoRun((m) => {
-    liveInfo.style.display = "block";
-    liveInfo.textContent = `▶️ DEMO run: ${JSON.stringify(m)}`;
-    // También puedes refrescar la lista si el backend llena last_run_id
-    // reloadDemo();
+  onDemoRun(async (m) => {
+  liveInfo.style.display = "block";
+  liveInfo.textContent = `▶️ Ejecutando: ${m.seq_name ?? 'DEMO'} (run ${m.run_id})`;
+
+  // Actualiza lista DEMO con su último run_id
+  await reloadDemo();
   });
+
 }
 
 // ---------- init ----------

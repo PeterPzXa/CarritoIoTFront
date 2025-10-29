@@ -38,6 +38,8 @@ document.querySelectorAll(".action-btn").forEach(btn=>{
     try{
       buttonBusy(btn, true);
       await postMovement({ device_id: DEVICE_ID, status_id: status, notes: btn.textContent.trim() });
+      btn.classList.add("btn-success");
+      setTimeout(() => btn.classList.remove("btn-success"), 500);
       toast("Movimiento enviado","success");
     }catch(err){
       console.error(err);
@@ -61,3 +63,21 @@ tempBtn?.addEventListener("click", async ()=>{
     buttonBusy(tempBtn, false);
   }
 });
+
+// REFRESH AUTOMATICO DE STATUS
+async function autoRefresh() {
+  try {
+    const lastMov = await getLastMovement(DEVICE_ID);
+    setText(lastStatusEl, lastMov?.data?.[0]?.status_text ?? "—");
+
+    const lastObst = await getLastObstacle(DEVICE_ID);
+    setText(obstacleEl, lastObst?.data?.[0]?.status_text ?? "NINGUNO");
+
+  } catch (err) {
+    console.warn("⚠️ Auto-refresh control error:", err);
+  }
+}
+
+// Ejecutar cada 4 segundos
+setInterval(autoRefresh, 10000);
+

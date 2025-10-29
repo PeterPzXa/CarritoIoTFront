@@ -15,7 +15,6 @@ const btnReloadObst = document.getElementById("btnReloadObst");
 
 // -------- utilidades ----------
 const fmt = (v) => v ?? "—";
-const take = (arr, n) => arr.slice(0, n);
 const asTime = (iso) => {
   try { return new Date(iso).toLocaleString(); }
   catch { return iso || "—"; }
@@ -32,6 +31,7 @@ function buildLineChart(ctx, label, color) {
       datasets: [{
         label,
         data: [],
+        borderColor: color,
         tension: 0.2
       }]
     },
@@ -70,27 +70,8 @@ async function loadInitial() {
   chartMovs = buildLineChart(document.getElementById("chartMovs"), "Movimientos", "#0d6efd");
   chartObst = buildLineChart(document.getElementById("chartObst"), "Obstáculos", "#dc3545");
 
-  // últimos N
-  try {
-    const movs = await getLastMovements(DEVICE_ID, 20);
-    (movs.data || []).forEach((r) => {
-      prependRow(tblMovsBody, [
-        fmt(r.move_id), fmt(r.status_text), asTime(r.occurred_at), fmt(r.notes)
-      ]);
-      // para la gráfica usamos un conteo incremental simple (1 pt por evento)
-      prependChartPoint(chartMovs, r.occurred_at, 1);
-    });
-  } catch (e) { /* noop */ }
-
-  try {
-    const obst = await getLastObstacles(DEVICE_ID, 20);
-    (obst.data || []).forEach((r) => {
-      prependRow(tblObstBody, [
-        fmt(r.obst_id), fmt(r.status_text), asTime(r.occurred_at), fmt(r.details)
-      ]);
-      prependChartPoint(chartObst, r.occurred_at, 1);
-    });
-  } catch (e) { /* noop */ }
+  await reloadMovs();
+  await reloadObst();
 }
 
 // -------- WebSocket ----------
@@ -102,11 +83,9 @@ function attachWS() {
   socket.on("disconnect", () => wsBadge.textContent = "WS: Desconectado");
 
   onMovement((m) => {
-    // tabla
     prependRow(tblMovsBody, [
       fmt(m.move_id), fmt(m.status_text), asTime(m.occurred_at), fmt(m.notes)
     ]);
-    // chart
     prependChartPoint(chartMovs, m.occurred_at, 1);
   });
 
@@ -119,11 +98,12 @@ function attachWS() {
 }
 
 // -------- recarga manual ----------
-btnReloadMovs?.addEventListener("click", async () => {
+async function reloadMovs() {
   tblMovsBody.innerHTML = "";
   chartMovs.data.labels = [];
   chartMovs.data.datasets[0].data = [];
   chartMovs.update();
+
   const movs = await getLastMovements(DEVICE_ID, 20);
   (movs.data || []).forEach((r) => {
     prependRow(tblMovsBody, [
@@ -131,13 +111,14 @@ btnReloadMovs?.addEventListener("click", async () => {
     ]);
     prependChartPoint(chartMovs, r.occurred_at, 1);
   });
-});
+}
 
-btnReloadObst?.addEventListener("click", async () => {
+async function reloadObst() {
   tblObstBody.innerHTML = "";
   chartObst.data.labels = [];
   chartObst.data.datasets[0].data = [];
   chartObst.update();
+
   const obst = await getLastObstacles(DEVICE_ID, 20);
   (obst.data || []).forEach((r) => {
     prependRow(tblObstBody, [
@@ -145,7 +126,19 @@ btnReloadObst?.addEventListener("click", async () => {
     ]);
     prependChartPoint(chartObst, r.occurred_at, 1);
   });
-});
+}
+
+btnReloadMovs?.addEventListener("click", reloadMovs);
+btnReloadObst?.addEventListener("click", reloadObst);
+
+// -------- actualización automática ----------
+function autoRefresh() {
+  reloadMovs();
+  reloadObst();
+  console.log("🔄 Refrescando datos automáticamente...");
+}
+// refrescar cada 5 segundos
+setInterval(autoRefresh, 10000);
 
 // -------- init ----------
 loadInitial().then(attachWS);
