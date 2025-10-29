@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Modo DEMO — Carbot</title>
+
+  <!-- Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/styles.css">
+  <style>
+    .step-row { gap: 10px; }
+    .step-row .form-control, .step-row .form-select { min-width: 120px; }
+    .steps-box { max-height: 320px; overflow: auto; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+  </style>
+</head>
+<body class="bg-light">
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container">
+    <a class="navbar-brand" href="../index.html">🚗 Carbot IoT</a>
+    <div class="d-flex">
+      <a class="btn btn-outline-light btn-sm" href="./control.html">Control</a>
+      <a class="btn btn-outline-light btn-sm ms-2" href="./monitor.html">Monitoreo</a>
+    </div>
+  </div>
+</nav>
+
+<main class="container py-4">
+  <h2 class="text-center fw-bold mb-4">MODO DEMO — Programación de Secuencias</h2>
+
+  <!-- Badges -->
+  <div class="d-flex justify-content-center gap-2 mb-3">
+    <span class="badge text-bg-secondary badge-big" id="tzBadge">TZ</span>
+    <span class="badge text-bg-light badge-big" id="deviceBadge">Device</span>
+    <span class="badge text-bg-success badge-big" id="wsBadge">WS: —</span>
+  </div>
+
+  <div class="row g-3">
+    <!-- Constructor de secuencia -->
+    <div class="col-lg-7">
+      <div class="card p-3">
+        <h5 class="mb-3">Crear secuencia</h5>
+
+        <div class="row g-2">
+          <div class="col-md-6">
+            <label class="form-label">Nombre de secuencia</label>
+            <input id="seqName" class="form-control" placeholder="DEMO_ZigZag" />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Repeticiones</label>
+            <input id="repeatCount" type="number" min="1" value="1" class="form-control" />
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Programado por</label>
+            <input id="programmedBy" class="form-control" placeholder="admin" value="admin" />
+          </div>
+        </div>
+
+        <hr>
+
+        <div class="d-flex align-items-end gap-2 step-row">
+          <div>
+            <label class="form-label">Movimiento</label>
+            <select id="stepStatus" class="form-select">
+              <option value="1">Adelante (1)</option>
+              <option value="2">Atrás (2)</option>
+              <option value="3">Detener (3)</option>
+              <option value="4">Vuelta adelante derecha (4)</option>
+              <option value="5">Vuelta adelante izquierda (5)</option>
+              <option value="6">Vuelta atrás derecha (6)</option>
+              <option value="7">Vuelta atrás izquierda (7)</option>
+              <option value="8">Giro 90° derecha (8)</option>
+              <option value="9">Giro 90° izquierda (9)</option>
+              <option value="10">Giro 360° derecha (10)</option>
+              <option value="11">Giro 360° izquierda (11)</option>
+            </select>
+          </div>
+          <div>
+            <label class="form-label">Duración (ms)</label>
+            <input id="stepDuration" type="number" min="0" value="1000" class="form-control" />
+          </div>
+          <div>
+            <label class="form-label">Velocidad</label>
+            <input id="stepSpeed" type="number" min="0" max="100" value="60" class="form-control" />
+          </div>
+          <div>
+            <label class="form-label">Espera (ms)</label>
+            <input id="stepWait" type="number" min="0" value="100" class="form-control" />
+          </div>
+          <button id="btnAddStep" class="btn btn-primary">Agregar paso</button>
+        </div>
+
+        <div class="steps-box mt-3">
+          <table class="table table-sm align-middle">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Status</th>
+                <th>Duración</th>
+                <th>Velocidad</th>
+                <th>Espera</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="stepsBody"></tbody>
+          </table>
+        </div>
+
+        <div class="d-flex justify-content-between mt-2">
+          <small class="text-muted">Los pasos se enviarán como JSON a la API.</small>
+          <div>
+            <button id="btnClearSteps" class="btn btn-outline-secondary btn-sm">Limpiar</button>
+            <button id="btnCreateDemo" class="btn btn-success ms-2">Crear DEMO</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Últimas 20 + Ejecutar / Repetir -->
+    <div class="col-lg-5">
+      <div class="card p-3">
+        <div class="d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">Últimas 20 DEMO</h5>
+          <button id="btnReloadDemo" class="btn btn-sm btn-outline-primary">Recargar</button>
+        </div>
+        <div class="table-responsive mt-2" style="max-height:360px;overflow:auto;">
+          <table class="table table-sm align-middle">
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Nombre</th>
+                <th>Creada</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="demoBody"></tbody>
+          </table>
+        </div>
+        <div class="alert alert-info mono mt-3" id="liveInfo" style="display:none;"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="text-center py-3 text-muted">
+  Desarrollado por Pedro Daniel Molina Monroy
+</footer>
+
+<!-- Libs -->
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+
+<!-- Módulos -->
+<script type="module" src="../js/config.js"></script>
+<script type="module" src="../js/api.js"></script>
+<script type="module" src="../js/sockets.js"></script>
+<script type="module" src="../js/ui.js"></script>
+<script type="module" src="../js/demo.js"></script>
+</body>
+</html>
