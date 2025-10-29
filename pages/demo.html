@@ -7,112 +7,423 @@
 
   <!-- Bootstrap -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="../assets/css/styles.css">
+  
   <style>
-    .step-row { gap: 10px; }
-    .step-row .form-control, .step-row .form-select { min-width: 120px; }
-    .steps-box { max-height: 320px; overflow: auto; }
-    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+    :root {
+      --primary: #4361ee;
+      --secondary: #3f37c9;
+      --success: #4cc9f0;
+      --warning: #f72585;
+      --danger: #e63946;
+      --light: #f8f9fa;
+      --dark: #212529;
+      --gradient-primary: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+      --gradient-success: linear-gradient(135deg, #4cc9f0 0%, #4895ef 100%);
+      --gradient-warning: linear-gradient(135deg, #f72585 0%, #b5179e 100%);
+      --gradient-danger: linear-gradient(135deg, #e63946 0%, #d00000 100%);
+      --shadow: 0 10px 20px rgba(0,0,0,0.1);
+      --shadow-hover: 0 15px 30px rgba(0,0,0,0.15);
+    }
+    
+    body {
+      background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+      min-height: 100vh;
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+    
+    .navbar {
+      background: var(--gradient-primary) !important;
+      border-bottom: none;
+      box-shadow: var(--shadow);
+    }
+    
+    .card {
+      border-radius: 20px;
+      border: none;
+      box-shadow: var(--shadow);
+      transition: all 0.3s ease;
+      overflow: hidden;
+    }
+    
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: var(--shadow-hover);
+    }
+    
+    .card-header {
+      background: var(--gradient-warning);
+      color: white;
+      border-bottom: none;
+      font-weight: 600;
+      padding: 15px 20px;
+    }
+    
+    .badge-big {
+      font-size: 0.95rem !important;
+      padding: 8px 12px !important;
+      font-weight: bold;
+      border-radius: 10px;
+      box-shadow: var(--shadow);
+    }
+    
+    .floating {
+      animation: floating 3s ease-in-out infinite;
+    }
+    
+    @keyframes floating {
+      0% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+      100% { transform: translateY(0px); }
+    }
+    
+    .pulse {
+      animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+      100% { transform: scale(1); }
+    }
+    
+    .step-row { 
+      gap: 10px; 
+    }
+    
+    .step-row .form-control, .step-row .form-select { 
+      min-width: 120px; 
+      border-radius: 10px;
+      border: 2px solid #e9ecef;
+      transition: all 0.3s ease;
+    }
+    
+    .step-row .form-control:focus, .step-row .form-select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 0.2rem rgba(67, 97, 238, 0.25);
+    }
+    
+    .steps-box { 
+      max-height: 320px; 
+      overflow: auto;
+      border-radius: 15px;
+    }
+    
+    .mono { 
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; 
+    }
+    
+    .btn-primary {
+      background: var(--gradient-primary);
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-hover);
+    }
+    
+    .btn-success {
+      background: var(--gradient-success);
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+    }
+    
+    .btn-warning {
+      background: var(--gradient-warning);
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      color: white;
+    }
+    
+    .table-responsive {
+      border-radius: 15px;
+    }
+    
+    table {
+      margin-bottom: 0;
+    }
+    
+    thead th {
+      background: rgba(247, 37, 133, 0.1);
+      border-bottom: 2px solid #f72585;
+      font-weight: 600;
+      color: #f72585;
+      position: sticky;
+      top: 0;
+    }
+    
+    tbody tr {
+      transition: all 0.2s ease;
+    }
+    
+    tbody tr:hover {
+      background: rgba(247, 37, 133, 0.05);
+    }
+    
+    .status-badge {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 0.85rem;
+    }
+    
+    .status-active {
+      background: rgba(76, 201, 240, 0.2);
+      color: #4cc9f0;
+      border: 1px solid #4cc9f0;
+    }
+    
+    .status-waiting {
+      background: rgba(255, 193, 7, 0.2);
+      color: #ffc107;
+      border: 1px solid #ffc107;
+    }
+    
+    .step-item {
+      border-left: 4px solid #f72585;
+      padding-left: 15px;
+      margin-bottom: 10px;
+      transition: all 0.3s ease;
+    }
+    
+    .step-item:hover {
+      border-left-color: #4361ee;
+      background: rgba(67, 97, 238, 0.05);
+    }
+    
+    .demo-card {
+      background: white;
+      border-radius: 15px;
+      padding: 15px;
+      margin-bottom: 10px;
+      box-shadow: var(--shadow);
+      transition: all 0.3s ease;
+      border-left: 4px solid #f72585;
+    }
+    
+    .demo-card:hover {
+      transform: translateX(5px);
+      box-shadow: var(--shadow-hover);
+    }
+    
+    .live-info {
+      background: rgba(67, 97, 238, 0.1);
+      border-radius: 15px;
+      border-left: 4px solid #4361ee;
+    }
+    
+    .progress {
+      height: 8px;
+      border-radius: 10px;
+      margin-top: 10px;
+    }
+    
+    .progress-bar {
+      background: var(--gradient-warning);
+      border-radius: 10px;
+    }
+    
+    .sequence-preview {
+      background: rgba(247, 37, 133, 0.1);
+      border-radius: 15px;
+      padding: 15px;
+      margin-top: 15px;
+    }
+    
+    .step-indicator {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 25px;
+      height: 25px;
+      background: var(--gradient-warning);
+      color: white;
+      border-radius: 50%;
+      font-size: 0.8rem;
+      font-weight: bold;
+      margin-right: 10px;
+    }
+    
+    footer {
+      background: var(--dark);
+      color: #ccc;
+      font-size: .9rem;
+      margin-top: 30px;
+      border-radius: 15px 15px 0 0;
+    }
+    
+    /* Scrollbar personalizado */
+    .steps-box::-webkit-scrollbar {
+      width: 8px;
+    }
+    
+    .steps-box::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 10px;
+    }
+    
+    .steps-box::-webkit-scrollbar-thumb {
+      background: var(--gradient-warning);
+      border-radius: 10px;
+    }
+    
+    .steps-box::-webkit-scrollbar-thumb:hover {
+      background: #b5179e;
+    }
   </style>
 </head>
 <body class="bg-light">
 
-<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+<nav class="navbar navbar-expand-lg navbar-dark">
   <div class="container">
-    <a class="navbar-brand" href="../index.html">🚗 Carbot IoT</a>
+    <a class="navbar-brand fw-bold" href="../index.html">
+      <i class="fas fa-car me-2"></i>Carbot IoT
+    </a>
     <div class="d-flex">
-      <a class="btn btn-outline-light btn-sm" href="./control.html">Control</a>
-      <a class="btn btn-outline-light btn-sm ms-2" href="./monitor.html">Monitoreo</a>
+      <a class="btn btn-outline-light btn-sm" href="./control.html">
+        <i class="fas fa-gamepad me-1"></i>Control
+      </a>
+      <a class="btn btn-outline-light btn-sm ms-2" href="./monitor.html">
+        <i class="fas fa-chart-line me-1"></i>Monitoreo
+      </a>
     </div>
   </div>
 </nav>
 
 <main class="container py-4">
-  <h2 class="text-center fw-bold mb-4">MODO DEMO — Programación de Secuencias</h2>
+  <h2 class="text-center fw-bold mb-4 floating">MODO DEMO — Programación de Secuencias</h2>
 
   <!-- Badges -->
-  <div class="d-flex justify-content-center gap-2 mb-3">
-    <span class="badge text-bg-secondary badge-big" id="tzBadge">TZ</span>
-    <span class="badge text-bg-light badge-big" id="deviceBadge">Device</span>
-    <span class="badge text-bg-success badge-big" id="wsBadge">WS: —</span>
+  <div class="d-flex justify-content-center gap-2 mb-4">
+    <span class="badge text-bg-secondary badge-big" id="tzBadge">
+      <i class="fas fa-globe me-1"></i>TZ
+    </span>
+    <span class="badge text-bg-light badge-big" id="deviceBadge">
+      <i class="fas fa-microchip me-1"></i>Device
+    </span>
+    <span class="badge text-bg-success badge-big pulse" id="wsBadge">
+      <i class="fas fa-signal me-1"></i>WS: Conectado
+    </span>
   </div>
 
-  <div class="row g-3">
+  <div class="row g-4">
     <!-- Constructor de secuencia -->
     <div class="col-lg-7">
-      <div class="card p-3">
-        <h5 class="mb-3">Crear secuencia</h5>
-
-        <div class="row g-2">
-          <div class="col-md-6">
-            <label class="form-label">Nombre de secuencia</label>
-            <input id="seqName" class="form-control" placeholder="DEMO_ZigZag" />
-          </div>
-          <div class="col-md-3">
-            <label class="form-label">Repeticiones</label>
-            <input id="repeatCount" type="number" min="1" value="1" class="form-control" />
-          </div>
-          <div class="col-md-3">
-            <label class="form-label">Programado por</label>
-            <input id="programmedBy" class="form-control" placeholder="admin" value="admin" />
-          </div>
+      <div class="card">
+        <div class="card-header">
+          <i class="fas fa-code me-2"></i>Crear Secuencia de Movimientos
         </div>
-
-        <hr>
-
-        <div class="d-flex align-items-end gap-2 step-row">
-          <div>
-            <label class="form-label">Movimiento</label>
-            <select id="stepStatus" class="form-select">
-              <option value="1">Adelante (1)</option>
-              <option value="2">Atrás (2)</option>
-              <option value="3">Detener (3)</option>
-              <option value="4">Vuelta adelante derecha (4)</option>
-              <option value="5">Vuelta adelante izquierda (5)</option>
-              <option value="6">Vuelta atrás derecha (6)</option>
-              <option value="7">Vuelta atrás izquierda (7)</option>
-              <option value="8">Giro 90° derecha (8)</option>
-              <option value="9">Giro 90° izquierda (9)</option>
-              <option value="10">Giro 360° derecha (10)</option>
-              <option value="11">Giro 360° izquierda (11)</option>
-            </select>
+        <div class="card-body p-4">
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <label class="form-label fw-bold">
+                <i class="fas fa-tag me-1"></i>Nombre de secuencia
+              </label>
+              <input id="seqName" class="form-control" placeholder="DEMO_ZigZag" />
+            </div>
+            <div class="col-md-3">
+              <label class="form-label fw-bold">
+                <i class="fas fa-redo me-1"></i>Repeticiones
+              </label>
+              <input id="repeatCount" type="number" min="1" value="1" class="form-control" />
+            </div>
+            <div class="col-md-3">
+              <label class="form-label fw-bold">
+                <i class="fas fa-user me-1"></i>Programado por
+              </label>
+              <input id="programmedBy" class="form-control" placeholder="admin" value="admin" />
+            </div>
           </div>
-          <div>
-            <label class="form-label">Duración (ms)</label>
-            <input id="stepDuration" type="number" min="0" value="1000" class="form-control" />
-          </div>
-          <div>
-            <label class="form-label">Velocidad</label>
-            <input id="stepSpeed" type="number" min="0" max="100" value="60" class="form-control" />
-          </div>
-          <div>
-            <label class="form-label">Espera (ms)</label>
-            <input id="stepWait" type="number" min="0" value="100" class="form-control" />
-          </div>
-          <button id="btnAddStep" class="btn btn-primary">Agregar paso</button>
-        </div>
 
-        <div class="steps-box mt-3">
-          <table class="table table-sm align-middle">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Status</th>
-                <th>Duración</th>
-                <th>Velocidad</th>
-                <th>Espera</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody id="stepsBody"></tbody>
-          </table>
-        </div>
+          <div class="sequence-preview">
+            <h6 class="fw-bold mb-3">
+              <i class="fas fa-list-ol me-2"></i>Configuración del Paso
+            </h6>
+            
+            <div class="d-flex flex-wrap align-items-end gap-3 step-row">
+              <div class="flex-fill">
+                <label class="form-label">Movimiento</label>
+                <select id="stepStatus" class="form-select">
+                  <option value="1">Adelante (1)</option>
+                  <option value="2">Atrás (2)</option>
+                  <option value="3">Detener (3)</option>
+                  <option value="4">Vuelta adelante derecha (4)</option>
+                  <option value="5">Vuelta adelante izquierda (5)</option>
+                  <option value="6">Vuelta atrás derecha (6)</option>
+                  <option value="7">Vuelta atrás izquierda (7)</option>
+                  <option value="8">Giro 90° derecha (8)</option>
+                  <option value="9">Giro 90° izquierda (9)</option>
+                  <option value="10">Giro 360° derecha (10)</option>
+                  <option value="11">Giro 360° izquierda (11)</option>
+                </select>
+              </div>
+              <div>
+                <label class="form-label">Duración (ms)</label>
+                <input id="stepDuration" type="number" min="0" value="1000" class="form-control" />
+              </div>
+              <div>
+                <label class="form-label">Velocidad</label>
+                <input id="stepSpeed" type="number" min="0" max="100" value="60" class="form-control" />
+              </div>
+              <div>
+                <label class="form-label">Espera (ms)</label>
+                <input id="stepWait" type="number" min="0" value="100" class="form-control" />
+              </div>
+              <button id="btnAddStep" class="btn btn-primary">
+                <i class="fas fa-plus me-1"></i>Agregar paso
+              </button>
+            </div>
+          </div>
 
-        <div class="d-flex justify-content-between mt-2">
-          <small class="text-muted">Los pasos se enviarán como JSON a la API.</small>
-          <div>
-            <button id="btnClearSteps" class="btn btn-outline-secondary btn-sm">Limpiar</button>
-            <button id="btnCreateDemo" class="btn btn-success ms-2">Crear DEMO</button>
+          <div class="mt-4">
+            <h6 class="fw-bold mb-3">
+              <i class="fas fa-project-diagram me-2"></i>Pasos de la Secuencia
+              <span class="badge bg-warning ms-2" id="stepCount">0 pasos</span>
+            </h6>
+            
+            <div class="steps-box mt-3">
+              <table class="table table-sm align-middle">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Status</th>
+                    <th>Duración</th>
+                    <th>Velocidad</th>
+                    <th>Espera</th>
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody id="stepsBody">
+                  <tr>
+                    <td colspan="6" class="text-center text-muted py-4">
+                      <i class="fas fa-plus-circle me-2"></i>Agrega el primer paso para comenzar
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="d-flex justify-content-between align-items-center mt-4">
+            <small class="text-muted">
+              <i class="fas fa-info-circle me-1"></i>Los pasos se enviarán como JSON a la API.
+            </small>
+            <div>
+              <button id="btnClearSteps" class="btn btn-outline-secondary">
+                <i class="fas fa-broom me-1"></i>Limpiar
+              </button>
+              <button id="btnCreateDemo" class="btn btn-success ms-2">
+                <i class="fas fa-rocket me-1"></i>Crear DEMO
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -120,32 +431,84 @@
 
     <!-- Últimas 20 + Ejecutar / Repetir -->
     <div class="col-lg-5">
-      <div class="card p-3">
-        <div class="d-flex justify-content-between align-items-center">
-          <h5 class="mb-0">Últimas 20 DEMO</h5>
-          <button id="btnReloadDemo" class="btn btn-sm btn-outline-primary">Recargar</button>
+      <div class="card">
+        <div class="card-header d-flex justify-content-between align-items-center">
+          <h5 class="mb-0">
+            <i class="fas fa-history me-2"></i>Últimas DEMOs
+          </h5>
+          <button id="btnReloadDemo" class="btn btn-sm btn-outline-light">
+            <i class="fas fa-sync-alt me-1"></i>Recargar
+          </button>
         </div>
-        <div class="table-responsive mt-2" style="max-height:360px;overflow:auto;">
-          <table class="table table-sm align-middle">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Nombre</th>
-                <th>Creada</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody id="demoBody"></tbody>
-          </table>
+        <div class="card-body p-0">
+          <div class="table-responsive" style="max-height:360px;overflow:auto;">
+            <table class="table table-sm align-middle mb-0">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Nombre</th>
+                  <th>Creada</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody id="demoBody">
+                <tr>
+                  <td colspan="4" class="text-center text-muted py-4">
+                    <i class="fas fa-spinner fa-spin me-2"></i>Cargando secuencias...
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
-        <div class="alert alert-info mono mt-3" id="liveInfo" style="display:none;"></div>
+      </div>
+      
+      <!-- Panel de ejecución -->
+      <div class="card mt-4">
+        <div class="card-header">
+          <i class="fas fa-play-circle me-2"></i>Ejecutar Secuencia
+        </div>
+        <div class="card-body">
+          <div class="mb-3">
+            <label class="form-label fw-bold">Seleccionar DEMO</label>
+            <select class="form-select" id="demoSelector">
+              <option>-- Selecciona una secuencia --</option>
+              <option>DEMO_ZigZag</option>
+              <option>DEMO_Cuadrado</option>
+              <option>DEMO_Espiral</option>
+            </select>
+          </div>
+          
+          <div class="d-grid gap-2">
+            <button class="btn btn-warning">
+              <i class="fas fa-play me-1"></i>Ejecutar Una Vez
+            </button>
+            <button class="btn btn-outline-warning">
+              <i class="fas fa-infinity me-1"></i>Ejecutar en Bucle
+            </button>
+          </div>
+          
+          <div class="progress mt-3" style="display: none;">
+            <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Información en vivo -->
+      <div class="alert alert-info live-info mt-4" id="liveInfo" style="display:none;">
+        <h6 class="fw-bold">
+          <i class="fas fa-broadcast-tower me-2"></i>Información en Tiempo Real
+        </h6>
+        <div class="mono small" id="liveInfoContent">
+          Esperando ejecución de secuencia...
+        </div>
       </div>
     </div>
   </div>
 </main>
 
-<footer class="text-center py-3 text-muted">
-  Desarrollado por Pedro Daniel Molina Monroy
+<footer class="text-center py-3">
+  <i class="fas fa-code me-2"></i>Desarrollado por Pedro Daniel Molina Monroy
 </footer>
 
 <!-- Libs -->
@@ -157,5 +520,6 @@
 <script type="module" src="../js/sockets.js"></script>
 <script type="module" src="../js/ui.js"></script>
 <script type="module" src="../js/demo.js"></script>
+
 </body>
 </html>

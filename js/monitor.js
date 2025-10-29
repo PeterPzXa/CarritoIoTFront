@@ -131,6 +131,56 @@ async function reloadObst() {
 btnReloadMovs?.addEventListener("click", reloadMovs);
 btnReloadObst?.addEventListener("click", reloadObst);
 
+
+
+// === MÉTRICAS REAL TIME ===
+async function refreshMetrics() {
+  try {
+    const movRes = await getLastMovements(DEVICE_ID, 9999);
+    const obstRes = await getLastObstacles(DEVICE_ID, 9999);
+
+    const movs = movRes.data || [];
+    const obsts = obstRes.data || [];
+
+    // Totales
+    document.getElementById('totalMovements').textContent = movs.length;
+    document.getElementById('totalObstacles').textContent = obsts.length;
+
+    // Última actividad
+    const lastMov  = movs.length ? movs[0] : null;
+    const lastObst = obsts.length ? obsts[0] : null;
+
+    const lastAct = [lastMov?.occurred_at, lastObst?.occurred_at]
+      .filter(Boolean)
+      .sort()
+      .pop();
+
+    document.getElementById('lastActivity').textContent =
+      lastAct ? new Date(lastAct).toLocaleString() : "—";
+
+    // Uptime (diferencia desde el primer registro)
+    const oldest = [...movs.map(m=>m.occurred_at), ...obsts.map(o=>o.occurred_at)]
+      .filter(Boolean)
+      .sort()[0];
+
+    if (oldest) {
+      const ms = Date.now() - new Date(oldest);
+      const h = Math.floor(ms / (1000*60*60));
+      const m = Math.floor((ms / (1000*60)) % 60);
+      document.getElementById('uptime').textContent = `${h}h ${m}m`;
+    } else {
+      document.getElementById('uptime').textContent = "0h";
+    }
+
+    // Contadores Live de tabla
+    document.getElementById('movCount').textContent = movs.slice(0,20).length;
+    document.getElementById('obstCount').textContent = obsts.slice(0,20).length;
+
+  } catch (err) {
+    console.error("⚠️ Error al refrescar métricas:", err);
+  }
+}
+
 // -------- actualización automática ----------
 function autoRefresh() {
   reloadMovs();
@@ -139,6 +189,9 @@ function autoRefresh() {
 }
 // refrescar cada 5 segundos
 setInterval(autoRefresh, 10000);
+// Ejecutar cada 5 segundos junto al resto del auto-refresh
+setInterval(refreshMetrics, 5000);
+refreshMetrics(); // Primer llamado inmediato
 
 // -------- init ----------
 loadInitial().then(attachWS);
