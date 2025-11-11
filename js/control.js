@@ -1,4 +1,4 @@
-// js/control.js
+// js/control.js — WS push only (sin polling)
 import { DEVICE_ID, DEFAULT_TZ } from "./config.js";
 import { postMovement, getLastMovement, getLastObstacle, postObstacle } from "./api.js";
 import { onMovement, onObstacle, connectSockets } from "./sockets.js";
@@ -10,28 +10,34 @@ const tempBtn      = document.getElementById("btnObstacleTemp");
 const tzBadge      = document.getElementById("tzBadge");
 const deviceBadge  = document.getElementById("deviceBadge");
 
-// Inicial
+// Init (carga una vez; luego TODO por WS)
 (async function init(){
   tzBadge.textContent = DEFAULT_TZ;
   deviceBadge.textContent = `Device ${DEVICE_ID}`;
 
   try {
     const lm = await getLastMovement(DEVICE_ID);
-    setText(lastStatusEl, lm?.data?.[0]?.status_text || "—");
-  } catch(e){ /* vacío */ }
+    setText(lastStatusEl, lm?.data?.[0]?.status_text ?? lm?.data?.[0]?.status_texto ?? "—");
+  } catch {}
 
   try {
     const lo = await getLastObstacle(DEVICE_ID);
-    setText(obstacleEl, lo?.data?.[0]?.status_text || "NINGUNO");
-  } catch(e){ /* vacío */ }
+    setText(obstacleEl, lo?.data?.[0]?.status_text ?? lo?.data?.[0]?.status_texto ?? "NINGUNO");
+  } catch {}
 
-  // WS
+  // Conecta WS y escucha eventos en vivo
   connectSockets();
-  onMovement((msg)=> setText(lastStatusEl, msg?.status_text ?? "—"));
-  onObstacle((msg)=> setText(obstacleEl, msg?.status_text ?? "NINGUNO"));
+  onMovement((msg)=> {
+    const st = msg?.status_text ?? msg?.status_texto ?? "—";
+    setText(lastStatusEl, st);
+  });
+  onObstacle((msg)=> {
+    const st = msg?.status_text ?? msg?.status_texto ?? "NINGUNO";
+    setText(obstacleEl, st);
+  });
 })();
 
-// Mapeo de botones -> status_id
+// Botonera -> POST; el monitor/control se actualiza por WS
 document.querySelectorAll(".action-btn").forEach(btn=>{
   btn.addEventListener("click", async ()=>{
     const status = Number(btn.dataset.status);
@@ -50,7 +56,7 @@ document.querySelectorAll(".action-btn").forEach(btn=>{
   });
 });
 
-// Botón temporal de obstáculo (usa status_id=5 Retrocede por defecto)
+// Botón temporal de obstáculo
 tempBtn?.addEventListener("click", async ()=>{
   try{
     buttonBusy(tempBtn, true);
@@ -63,21 +69,3 @@ tempBtn?.addEventListener("click", async ()=>{
     buttonBusy(tempBtn, false);
   }
 });
-
-// REFRESH AUTOMATICO DE STATUS
-async function autoRefresh() {
-  try {
-    const lastMov = await getLastMovement(DEVICE_ID);
-    setText(lastStatusEl, lastMov?.data?.[0]?.status_text ?? "—");
-
-    const lastObst = await getLastObstacle(DEVICE_ID);
-    setText(obstacleEl, lastObst?.data?.[0]?.status_text ?? "NINGUNO");
-
-  } catch (err) {
-    console.warn("⚠️ Auto-refresh control error:", err);
-  }
-}
-
-// Ejecutar cada 4 segundos
-setInterval(autoRefresh, 10000);
-

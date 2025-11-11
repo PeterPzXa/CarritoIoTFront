@@ -1,10 +1,23 @@
 // js/api.js
 import { BASE_URL, JSON_HEADERS, DEFAULT_TZ } from "./config.js";
 
+// js/api.js
 async function handle(res) {
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return await res.json();
+  const text = await res.text();                // lee SIEMPRE el body
+  if (!res.ok) {
+    console.error("API error body:", text);     // lo verás en consola del navegador
+    throw new Error(`HTTP ${res.status}: ${text?.slice(0,300)}`);
+  }
+  if (!text) return null;
+  try { 
+    return JSON.parse(text);
+  } catch (e) {
+    console.error("JSON parse error:", e, text);
+    throw new Error("Invalid JSON from API");
+  }
+  
 }
+
 
 // ===== Movements =====
 export async function postMovement({ device_id, status_id, client_id = null, notes = null }) {
