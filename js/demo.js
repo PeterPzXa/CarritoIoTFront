@@ -1,4 +1,3 @@
-// js/demo.js
 import { DEVICE_ID, DEFAULT_TZ } from "./config.js";
 import { createDemo, getLast20Demo, launchDemo, repeatDemo } from "./api.js";
 import { connectSockets, onDemoRun } from "./sockets.js";
@@ -7,6 +6,7 @@ import { toast } from "./ui.js";
 const tzBadge     = document.getElementById("tzBadge");
 const deviceBadge = document.getElementById("deviceBadge");
 const wsBadge     = document.getElementById("wsBadge");
+const wsText      = document.getElementById("wsText");
 
 const stepStatus   = document.getElementById("stepStatus");
 const stepDuration = document.getElementById("stepDuration");
@@ -25,8 +25,15 @@ const btnReloadDemo = document.getElementById("btnReloadDemo");
 const demoBody      = document.getElementById("demoBody");
 const liveInfo      = document.getElementById("liveInfo");
 
+const demoSelector  = document.getElementById("demoSelector");
+const btnExecOnce   = document.getElementById("btnExecOnce");
+const btnExecLoop   = document.getElementById("btnExecLoop");
+const execProgress  = document.getElementById("execProgress");
+const execBar       = execProgress?.querySelector(".progress-bar");
+
 // ---------- estado local ----------
 let steps = []; // {status_id, duration_ms, speed, wait_ms}
+let demoList = []; // cache de las demos que trae getLast20Demo()
 
 const fmt = (v) => v ?? "—";
 const asTime = (iso) => {
@@ -103,72 +110,196 @@ btnCreate.addEventListener("click", async () => {
 
 async function reloadDemo() {
   demoBody.innerHTML = "";
+  demoSelector.innerHTML = `<option value="">-- Selecciona una secuencia --</option>`;
   try {
     const res = await getLast20Demo();
-    (res.data || []).forEach(row => {
+    demoList = res.data || [];
+
+    demoList.forEach(row => {
+      const seqId   = row.sequence_id ?? row.id;
+      const seqName = row.seq_name || row.name || `DEMO ${seqId}`;
+
+      // Intenta obtener el último run_id con distintos nombres posibles
+      const lastRunId =
+        row.last_run_id ??
+        row.run_id ??
+        (row.last_run && row.last_run.run_id) ??
+        null;
+
       const tr = document.createElement("tr");
       tr.innerHTML = `
-        <td>${fmt(row.sequence_id ?? row.id)}</td>
-        <td>${fmt(row.seq_name || row.name || "DEMO")}</td>
+        <td>${fmt(seqId)}</td>
+        <td>${fmt(seqName)}</td>
         <td>${asTime(row.created_at)}</td>
         <td class="text-end">
-          <button class="btn btn-sm btn-outline-success" data-launch="${row.sequence_id ?? row.id}">Lanzar</button>
-          <button class="btn btn-sm btn-outline-secondary ms-1" data-repeat="${row.last_run_id ?? ""}" ${row.last_run_id ? "" : "disabled"}>Repetir</button>
+          <button class="btn btn-sm btn-outline-success" data-launch="${seqId}">
+            Lanzar
+          </button>
         </td>
       `;
       demoBody.appendChild(tr);
+
+      // Selector de Ejecutar Secuencia
+      const opt = document.createElement("option");
+      opt.value = String(seqId);
+      opt.textContent = seqName;
+      demoSelector.appendChild(opt);
     });
   } catch (e) {
     console.error(e);
   }
 }
 
-demoBody.addEventListener("click", async (e) => {
-  const sid = e.target?.dataset?.launch;
-  const rid = e.target?.dataset?.repeat;
 
+demoBody.addEventListener("click", async (e) => {
+  const btn = e.target.closest("button");
+  if (!btn) return;
+
+  const sid = btn.dataset.launch;
+  const rid = btn.dataset.repeat;
+
+  // Lanzar DEMO normal
   if (sid) {
     try {
-      e.target.disabled = true;
+      btn.disabled = true;
       await launchDemo(Number(sid));
-      toast(`DEMO ${sid} lanzada ▶️`,"success");
+      toast(`DEMO ${sid} lanzada ▶️`, "success");
+      await reloadDemo();
     } catch (err) {
       console.error(err);
-      toast("Error al lanzar DEMO","danger");
+      toast("Error al lanzar DEMO", "danger");
     } finally {
-      e.target.disabled = false;
+      btn.disabled = false;
     }
+    return; // ya manejamos este click
   }
 
+  // Repetir último run
   if (rid) {
     try {
-      e.target.disabled = true;
-      await repeatDemo(Number(rid));
-      toast(`DEMO repetida (run ${rid}) 🔁`,"success");
+      btn.disabled = true;
+      await repeatDemo(Number(rid));  // ← aquí se manda { run_id: X }
+      toast(`DEMO repetida (run ${rid}) 🔁`, "success");
+      await reloadDemo();
     } catch (err) {
       console.error(err);
-      toast("Error al repetir DEMO","danger");
+      toast("Error al repetir DEMO", "danger");
     } finally {
-      e.target.disabled = false;
+      btn.disabled = false;
     }
   }
 });
 
+
+btnExecOnce?.addEventListener("click", async () => {
+  const val = demoSelector.value;
+  if (!val) {
+    return toast("Selecciona una DEMO primero","warning");
+  }
+  const seqId = Number(val);
+  if (!seqId) {
+    return toast("ID de DEMO inválido","danger");
+  }
+
+  try {
+    btnExecOnce.disabled = true;
+    btnExecLoop.disabled = true;
+    if (execProgress && execBar) {
+      execProgress.style.display = "block";
+      execBar.style.width = "10%";
+    }
+
+    await launchDemo(seqId);
+    toast(`DEMO ${seqId} lanzada ▶️`,"success");
+
+    // Pequeño efecto en barra de progreso (simulado)
+    if (execBar) {
+      execBar.style.width = "100%";
+      setTimeout(() => {
+        if (execProgress && execBar) {
+          execBar.style.width = "0%";
+          execProgress.style.display = "none";
+        }
+      }, 1000);
+    }
+
+    // Refrescar listado para que se actualice last_run_id
+    await reloadDemo();
+  } catch (err) {
+    console.error(err);
+    toast("Error al lanzar DEMO desde panel Ejecutar Secuencia","danger");
+  } finally {
+    btnExecOnce.disabled = false;
+    btnExecLoop.disabled = false;
+  }
+});
+
+btnExecLoop?.addEventListener("click", async () => {
+  const val = demoSelector.value;
+  if (!val) {
+    return toast("Selecciona una DEMO primero","warning");
+  }
+  const seqId = Number(val);
+  if (!seqId) {
+    return toast("ID de DEMO inválido","danger");
+  }
+
+  toast("Modo bucle aún no implementado; se ejecutará una vez","info");
+
+  try {
+    btnExecOnce.disabled = true;
+    btnExecLoop.disabled = true;
+    await launchDemo(seqId);
+    toast(`DEMO ${seqId} lanzada (modo bucle placeholder) ▶️`,"success");
+    await reloadDemo();
+  } catch (err) {
+    console.error(err);
+    toast("Error al lanzar DEMO en bucle","danger");
+  } finally {
+    btnExecOnce.disabled = false;
+    btnExecLoop.disabled = false;
+  }
+});
+
 // ---------- sockets ----------
+function setWsStatus(state) {
+  if (!wsBadge || !wsText) return;
+
+  // Quitar colores anteriores
+  wsBadge.classList.remove("text-bg-secondary", "text-bg-success", "text-bg-danger");
+
+  if (state === "connecting") {
+    wsBadge.classList.add("text-bg-secondary");
+    wsText.textContent = "WS: Conectando…";
+  } else if (state === "connected") {
+    wsBadge.classList.add("text-bg-success");
+    wsText.textContent = "WS: Conectado";
+  } else {
+    wsBadge.classList.add("text-bg-danger");
+    wsText.textContent = "WS: Desconectado";
+  }
+}
+
 function attachWS() {
   const socket = connectSockets();
-  wsBadge.textContent = "WS: Conectando…";
-  socket.on("connect", () => wsBadge.textContent = "WS: Conectado");
-  socket.on("disconnect", () => wsBadge.textContent = "WS: Desconectado");
 
-  onDemoRun(async (m) => {
-  liveInfo.style.display = "block";
-  liveInfo.textContent = `▶️ Ejecutando: ${m.seq_name ?? 'DEMO'} (run ${m.run_id})`;
+  setWsStatus("connecting");
 
-  // Actualiza lista DEMO con su último run_id
-  await reloadDemo();
+  socket.on("connect", () => {
+    setWsStatus("connected");
   });
 
+  socket.on("disconnect", () => {
+    setWsStatus("disconnected");
+  });
+
+  onDemoRun(async (m) => {
+    liveInfo.style.display = "block";
+    liveInfo.textContent = `▶️ Ejecutando: ${m.seq_name ?? 'DEMO'} (run ${m.run_id})`;
+
+    // Actualiza lista DEMO con su último run_id
+    await reloadDemo();
+  });
 }
 
 // ---------- init ----------
@@ -178,3 +309,4 @@ function attachWS() {
   await reloadDemo();
   attachWS();
 })();
+

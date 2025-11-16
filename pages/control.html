@@ -313,6 +313,36 @@
         </button>
       </div>
     </div>
+    <!-- Sección de velocidad -->
+<div class="card mb-3">
+  <div class="card-body">
+    <h5 class="card-title">
+      <i class="fas fa-gauge-high me-2"></i>Velocidad del carrito
+    </h5>
+
+    <div class="row align-items-center">
+      <div class="col-9">
+        <!-- Rango 180–240 -->
+        <input
+          type="range"
+          class="form-range"
+          id="speedRange"
+          min="180"
+          max="240"
+          step="1"
+          value="200"
+        />
+      </div>
+      <div class="col-3 text-end">
+        <span class="badge bg-primary fs-6" id="speedLabel">200</span>
+      </div>
+    </div>
+
+    <small class="text-muted">
+      La velocidad seleccionada se enviará en el campo <code>notes</code> del movimiento.
+    </small>
+  </div>
+</div>
 
     <!-- Estado inferior -->
     <div class="row mt-4">

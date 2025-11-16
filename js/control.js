@@ -10,6 +10,19 @@ const tempBtn      = document.getElementById("btnObstacleTemp");
 const tzBadge      = document.getElementById("tzBadge");
 const deviceBadge  = document.getElementById("deviceBadge");
 
+const speedRange   = document.getElementById("speedRange");
+const speedLabel   = document.getElementById("speedLabel");
+
+// Inicializa etiqueta de velocidad
+if (speedRange && speedLabel) {
+  speedLabel.textContent = speedRange.value;
+
+  speedRange.addEventListener("input", () => {
+    speedLabel.textContent = speedRange.value;
+  });
+}
+
+
 // Init (carga una vez; luego TODO por WS)
 (async function init(){
   tzBadge.textContent = DEFAULT_TZ;
@@ -38,23 +51,39 @@ const deviceBadge  = document.getElementById("deviceBadge");
 })();
 
 // Botonera -> POST; el monitor/control se actualiza por WS
-document.querySelectorAll(".action-btn").forEach(btn=>{
-  btn.addEventListener("click", async ()=>{
-    const status = Number(btn.dataset.status);
-    try{
-      buttonBusy(btn, true);
-      await postMovement({ device_id: DEVICE_ID, status_id: status, notes: btn.textContent.trim() });
-      btn.classList.add("btn-success");
-      setTimeout(() => btn.classList.remove("btn-success"), 500);
-      toast("Movimiento enviado","success");
-    }catch(err){
-      console.error(err);
-      toast("Error al enviar movimiento","danger");
-    }finally{
-      buttonBusy(btn, false);
-    }
+async function sendMovement(statusId, btn) {
+  const speed = speedRange ? Number(speedRange.value) : null;
+  const notes = speed ? String(speed) : ""; // 👈 aquí va la velocidad en notes
+
+  try {
+    if (btn) buttonBusy(btn, true);
+
+    await postMovement({
+      device_id: DEVICE_ID,
+      status_id: statusId,
+      client_id: null,
+      notes       // "200", "210", etc.
+    });
+
+    toast(`Movimiento ${statusId} enviado a velocidad ${notes}`, "success");
+  } catch (err) {
+    console.error(err);
+    toast("Error al enviar movimiento", "danger");
+  } finally {
+    if (btn) buttonBusy(btn, false);
+  }
+}
+
+// Listeners de los botones de movimiento (HTML usa data-status)
+document.querySelectorAll("[data-status]").forEach(btn => {
+  btn.addEventListener("click", () => {
+    const statusId = Number(btn.dataset.status);
+    if (!statusId) return;
+    sendMovement(statusId, btn);
   });
 });
+
+
 
 // Botón temporal de obstáculo
 tempBtn?.addEventListener("click", async ()=>{

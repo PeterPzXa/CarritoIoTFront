@@ -472,23 +472,18 @@
           <div class="mb-3">
             <label class="form-label fw-bold">Seleccionar DEMO</label>
             <select class="form-select" id="demoSelector">
-              <option>-- Selecciona una secuencia --</option>
-              <option>DEMO_ZigZag</option>
-              <option>DEMO_Cuadrado</option>
-              <option>DEMO_Espiral</option>
+              <option value="">-- Selecciona una secuencia --</option>
+              <!-- Las opciones estáticas las vamos a borrar, se llenarán desde JS -->
             </select>
           </div>
           
           <div class="d-grid gap-2">
-            <button class="btn btn-warning">
+            <button class="btn btn-warning" id="btnExecOnce">
               <i class="fas fa-play me-1"></i>Ejecutar Una Vez
-            </button>
-            <button class="btn btn-outline-warning">
-              <i class="fas fa-infinity me-1"></i>Ejecutar en Bucle
             </button>
           </div>
           
-          <div class="progress mt-3" style="display: none;">
+          <div class="progress mt-3" id="execProgress" style="display: none;">
             <div class="progress-bar" role="progressbar" style="width: 0%"></div>
           </div>
         </div>

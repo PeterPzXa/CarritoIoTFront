@@ -6,6 +6,7 @@ import { connectSockets, onMovement, onObstacle } from "./sockets.js";
 const tzBadge     = document.getElementById("tzBadge");
 const deviceBadge = document.getElementById("deviceBadge");
 const wsBadge     = document.getElementById("wsBadge");
+const wsText      = document.getElementById("wsText");
 
 const tblMovsBody = document.querySelector("#tblMovs tbody");
 const tblObstBody = document.querySelector("#tblObst tbody");
@@ -118,66 +119,95 @@ async function loadInitial() {
   const movs = movsRes.data || [];
   const obsts = obstRes.data || [];
 
-  movs.forEach((r) => {
+  // La API ya viene en DESC → la invertimos para que el prepend deje la tabla en DESC
+  const movsOrdered  = [...movs].reverse();
+  const obstsOrdered = [...obsts].reverse();
+
+  movsOrdered.forEach((r) => {
     const t = pickTime(r);
     prependRow(tblMovsBody, [fmt(r.move_id), pickStatus(r), asTime(t), fmt(r.notes)]);
     prependChartPoint(chartMovs, t, 1);
   });
-  obsts.forEach((r) => {
+  obstsOrdered.forEach((r) => {
     const t = pickTime(r);
     prependRow(tblObstBody, [fmt(r.obst_id), pickStatus(r), asTime(t), fmt(r.details)]);
     prependChartPoint(chartObst, t, 1);
   });
 
-  recalcMetricsOnInitial(movs, obsts);
+  recalcMetricsOnInitial(movs, obsts); // aquí puedes dejar movs/obsts originales
+
+
 }
 
 // -------- WebSocket ----------
+function setWsStatus(state) {
+  if (!wsBadge || !wsText) return;
+
+  wsBadge.classList.remove("text-bg-secondary", "text-bg-success", "text-bg-danger");
+
+  if (state === "connecting") {
+    wsBadge.classList.add("text-bg-secondary");
+    wsText.textContent = "WS: Conectando…";
+  } else if (state === "connected") {
+    wsBadge.classList.add("text-bg-success");
+    wsText.textContent = "WS: Conectado";
+  } else {
+    wsBadge.classList.add("text-bg-danger");
+    wsText.textContent = "WS: Desconectado";
+  }
+}
+
 function attachWS() {
   const socket = connectSockets();
-  wsBadge.textContent = "WS: Conectando…";
-  console.log("🟢 Conectando WS desde monitor.js...");
-  socket.on("connect", () => wsBadge.textContent = "WS: Conectado");
-  socket.on("disconnect", () => wsBadge.textContent = "WS: Desconectado");
+  setWsStatus("connecting");
+  console.log("🟢 Conectando WS desde monitor.js.");
 
- onMovement((m) => {
-  try {
-    const list = Array.isArray(m) ? m : [m];
-    list.forEach((item) => {
-      console.log("💡 Recibido movement:new", item);
-      const t = pickTime(item);
-      prependRow(
-        tblMovsBody,
-        [fmt(item.move_id ?? item.event_id), pickStatus(item), asTime(t), fmt(item.notes ?? item.detalles ?? item.details)]
-      );
-      prependChartPoint(chartMovs, t, 1);
-      bumpMetricsOnEvent(t, "mov");
-    });
-  } catch (e) {
-    console.error("paint movement error:", e, m);
-  }
-});
+  socket.on("connect", () => {
+    setWsStatus("connected");
+  });
 
-onObstacle((o) => {
-  try {
-    const list = Array.isArray(o) ? o : [o];
-    list.forEach((item) => {
-      console.log("🚧 Recibido obstacle:new", item);
-      const t = pickTime(item);
-      prependRow(
-        tblObstBody,
-        [fmt(item.obst_id ?? item.event_id), pickStatus(item), asTime(t), fmt(item.details ?? item.detalle ?? item.notes)]
-      );
-      prependChartPoint(chartObst, t, 1);
-      bumpMetricsOnEvent(t, "obst");
-    });
-  } catch (e) {
-    console.error("paint obstacle error:", e, o);
-  }
-});
+  socket.on("disconnect", () => {
+    setWsStatus("disconnected");
+  });
 
+  onMovement((m) => {
+    try {
+      const list = Array.isArray(m) ? m : [m];
+      list.forEach((item) => {
+        console.log("💡 Recibido movement:new", item);
+        const t = pickTime(item);
+        prependRow(
+          tblMovsBody,
+          [fmt(item.move_id ?? item.event_id), pickStatus(item), asTime(t), fmt(item.notes ?? item.detalles ?? item.details)]
+        );
+        prependChartPoint(chartMovs, t, 1);
+        bumpMetricsOnEvent(t, "mov");
+      });
+    } catch (e) {
+      console.error("paint movement error:", e, m);
+    }
+  });
 
+  onObstacle((o) => {
+    try {
+      const list = Array.isArray(o) ? o : [o];
+      list.forEach((item) => {
+        console.log("🚧 Recibido obstacle:new", item);
+        const t = pickTime(item);
+        prependRow(
+          tblObstBody,
+          [fmt(item.obst_id ?? item.event_id), pickStatus(item), asTime(t), fmt(item.details ?? item.detalle ?? item.notes)]
+        );
+        prependChartPoint(chartObst, t, 1);
+        bumpMetricsOnEvent(t, "obst");
+      });
+    } catch (e) {
+      console.error("paint obstacle error:", e, o);
+    }
+  });
 }
+
+
 
 // -------- recarga manual (opcional) ----------
 async function reloadMovs() {
@@ -185,8 +215,13 @@ async function reloadMovs() {
   chartMovs.data.labels = [];
   chartMovs.data.datasets[0].data = [];
   chartMovs.update();
+
   const movs = (await getLastMovements(DEVICE_ID, 20)).data || [];
-  movs.forEach((r) => {
+
+  // Igual que en loadInitial: invertimos para que con prepend quede DESC
+  const movsOrdered = [...movs].reverse();
+
+  movsOrdered.forEach((r) => {
     const t = pickTime(r);
     prependRow(tblMovsBody, [fmt(r.move_id), pickStatus(r), asTime(t), fmt(r.notes)]);
     prependChartPoint(chartMovs, t, 1);
@@ -198,13 +233,18 @@ async function reloadObst() {
   chartObst.data.labels = [];
   chartObst.data.datasets[0].data = [];
   chartObst.update();
+
   const obst = (await getLastObstacles(DEVICE_ID, 20)).data || [];
-  obst.forEach((r) => {
+
+  const obstOrdered = [...obst].reverse();
+
+  obstOrdered.forEach((r) => {
     const t = pickTime(r);
     prependRow(tblObstBody, [fmt(r.obst_id), pickStatus(r), asTime(t), fmt(r.details)]);
     prependChartPoint(chartObst, t, 1);
   });
 }
+
 btnReloadMovs?.addEventListener("click", reloadMovs);
 btnReloadObst?.addEventListener("click", reloadObst);
 
