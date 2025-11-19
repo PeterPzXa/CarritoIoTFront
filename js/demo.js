@@ -36,10 +36,38 @@ let steps = []; // {status_id, duration_ms, speed, wait_ms}
 let demoList = []; // cache de las demos que trae getLast20Demo()
 
 const fmt = (v) => v ?? "—";
+
+function parseUtc(iso) {
+  if (!iso) return null;
+  let s = String(iso);
+
+  if (!s.includes("T") && s.includes(" ")) {
+    s = s.replace(" ", "T");
+  }
+
+  if (!/[zZ]|[+\-]\d{2}:?\d{2}$/.test(s)) {
+    s += "Z";
+  }
+
+  const d = new Date(s);
+  return isNaN(d.getTime()) ? null : d;
+}
+
 const asTime = (iso) => {
-  try { return new Date(iso).toLocaleString(); }
-  catch { return iso || "—"; }
+  const d = parseUtc(iso);
+  if (!d) return iso || "—";
+
+  try {
+    return new Intl.DateTimeFormat("es-MX", {
+      dateStyle: "short",
+      timeStyle: "medium",
+      timeZone: DEFAULT_TZ,
+    }).format(d);
+  } catch {
+    return d.toLocaleString();
+  }
 };
+
 
 function renderSteps() {
   stepsBody.innerHTML = "";

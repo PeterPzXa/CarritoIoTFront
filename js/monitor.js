@@ -17,8 +17,44 @@ const btnReloadObst = document.getElementById("btnReloadObst");
 // -------- utilidades ----------
 const fmt = (v) => v ?? "—";
 const pickTime = (o) => o?.occurred_at ?? o?.event_at ?? o?.created_at ?? null;
-const asTime = (iso) => { try { return iso ? new Date(iso).toLocaleString() : "—"; } catch { return iso || "—"; } };
+
+// Convierte un string de la API (UTC) a Date real en UTC
+function parseUtc(iso) {
+  if (!iso) return null;
+  let s = String(iso);
+
+  // "2025-11-17 19:16:42" -> "2025-11-17T19:16:42"
+  if (!s.includes("T") && s.includes(" ")) {
+    s = s.replace(" ", "T");
+  }
+
+  // Si no trae zona horaria (+hh:mm o Z), asumimos que viene en UTC
+  if (!/[zZ]|[+\-]\d{2}:?\d{2}$/.test(s)) {
+    s += "Z";
+  }
+
+  const d = new Date(s);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+// Formatea para mostrar en tu zona horaria (America/Mexico_City)
+const asTime = (iso) => {
+  const d = parseUtc(iso);
+  if (!d) return iso || "—";
+
+  try {
+    return new Intl.DateTimeFormat("es-MX", {
+      dateStyle: "short",
+      timeStyle: "medium",
+      timeZone: DEFAULT_TZ, // viene de config.js
+    }).format(d);
+  } catch {
+    return d.toLocaleString();
+  }
+};
+
 const pickStatus = (o) => o?.status_text ?? o?.status_texto ?? "—";
+
 
 // -------- Chart.js ----------
 let chartMovs, chartObst;
@@ -88,11 +124,11 @@ function recalcMetricsOnInitial(movs, obsts) {
 
   const allTimes = [
     ...movs.map(pickTime).filter(Boolean),
-    ...obsts.map(pickTime).filter(Boolean)
+    ...obsts.map(pickTime).filter(Boolean),
   ].sort();
 
-  firstTimestamp = allTimes[0] ? new Date(allTimes[0]) : null;
-  lastActivityTs = allTimes.length ? new Date(allTimes[allTimes.length - 1]) : null;
+  firstTimestamp = allTimes[0] ? parseUtc(allTimes[0]) : null;
+  lastActivityTs = allTimes.length ? parseUtc(allTimes[allTimes.length - 1]) : null;
   paintMetrics();
 }
 
@@ -100,11 +136,12 @@ function bumpMetricsOnEvent(tsIso, kind) {
   if (kind === "mov") totalMovs++;
   if (kind === "obst") totalObst++;
 
-  const ts = tsIso ? new Date(tsIso) : new Date();
+  const ts = tsIso ? parseUtc(tsIso) : new Date();
   if (!firstTimestamp || ts < firstTimestamp) firstTimestamp = ts;
   if (!lastActivityTs || ts > lastActivityTs) lastActivityTs = ts;
   paintMetrics();
 }
+
 
 // -------- carga inicial (UNA VEZ) ----------
 async function loadInitial() {
