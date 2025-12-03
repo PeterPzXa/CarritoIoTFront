@@ -1,0 +1,115 @@
+/* ========================================================
+   Estilos personalizados - IoT Carbot
+   Bootstrap-friendly
+======================================================== */
+
+/* -------- Tipografías y base -------- */
+body {
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background: #f5f7fa !important;
+    color: #222;
+}
+
+h1, h2, h3, h4 {
+    font-weight: 700;
+}
+
+/* -------- Navbar -------- */
+.navbar {
+    border-bottom: 3px solid #007bff;
+}
+
+/* -------- Tarjetas del Home -------- */
+.card {
+    border-radius: 18px;
+    transition: transform .25s ease, box-shadow .25s ease;
+    cursor: pointer;
+}
+.card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0px 8px 22px rgba(0,0,0,0.12);
+}
+
+/* -------- Botones principales -------- */
+.action-btn {
+    min-width: 220px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    border-radius: 12px;
+    padding: 12px 18px;
+    font-size: 1rem;
+}
+
+.group-gap {
+    gap: 20px;
+}
+
+.btn-indigo {
+    background: #5d61e9 !important;
+    color: #fff !important;
+    border: none;
+}
+.btn-indigo:hover {
+    background: #4b4fcc !important;
+}
+
+/* -------- Estados visuales -------- */
+.status-box {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    padding: 4px 10px;
+}
+
+.badge-big {
+    font-size: 0.95rem !important;
+    padding: 6px 10px !important;
+    font-weight: bold;
+}
+
+/* -------- Pie de página -------- */
+footer {
+    background: #212529;
+    color: #ccc;
+    font-size: .9rem;
+}
+
+/* -------- Efectos globales -------- */
+.btn:active {
+    transform: scale(0.96);
+}
+
+/* ---------- Mobiliario Responsivo ---------- */
+@media (max-width: 768px) {
+    .action-btn { min-width: 160px; }
+}
+
+/* ---------- Tabla de Monitoreo ---------- */
+.table i {
+    font-size: 1.2rem;
+}
+
+/* Animación suave de alerta */
+.alert-info {
+    animation: fadeIn .4s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: .2; }
+    to { opacity: 1; }
+}
+body {
+    position: relative;
+    min-height: 100vh;
+    padding-bottom: 70px; /* Altura del footer + espacio extra */
+    box-sizing: border-box;
+}
+
+.footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    margin-top: 0;
+    z-index: 100;
+}

@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/png" href="assets/logo.png">
+    <title>IoT - Control Carbot</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --success: #4cc9f0;
+            --warning: #f72585;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gradient-primary: linear-gradient(135deg, #4361ee 0%, #3a0ca3 100%);
+            --gradient-success: linear-gradient(135deg, #4cc9f0 0%, #4895ef 100%);
+            --gradient-warning: linear-gradient(135deg, #f72585 0%, #b5179e 100%);
+            --shadow: 0 10px 20px rgba(0,0,0,0.1);
+            --shadow-hover: 0 15px 30px rgba(0,0,0,0.15);
+        }
+        
+        html, body {
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+            height: 100%;
+            width: 100%;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+        
+        header {
+            background: var(--gradient-primary);
+            padding: 1.2rem 1.5rem; /* Reducido */
+            text-align: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.4rem; /* Reducido */
+            letter-spacing: 1px;
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        
+        header::before {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 70%);
+            transform: rotate(30deg);
+        }
+        
+        main.container {
+            padding-top: 1.5rem;
+            padding-bottom: 1.5rem;
+            flex: 1 0 auto;
+            overflow-y: auto;
+        }
+        
+        .card {
+            border-radius: 18px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            border: none;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            background: white;
+            position: relative;
+            margin-bottom: 1rem;
+        }
+        
+        .card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px; /* Reducido */
+            background: var(--gradient-primary);
+        }
+        
+        .card-control::before {
+            background: var(--gradient-primary);
+        }
+        
+        .card-monitor::before {
+            background: var(--gradient-success);
+        }
+        
+        .card-demo::before {
+            background: var(--gradient-warning);
+        }
+        
+        .card:hover {
+            transform: translateY(-6px); /* Reducido */
+            box-shadow: var(--shadow-hover);
+        }
+        
+        .card-icon {
+            font-size: 2.8rem; /* Reducido */
+            margin-bottom: 0.8rem; /* Reducido */
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .card-control .card-icon {
+            background: var(--gradient-primary);
+            -webkit-background-clip: text;
+            background-clip: text;
+        }
+        
+        .card-monitor .card-icon {
+            background: var(--gradient-success);
+            -webkit-background-clip: text;
+            background-clip: text;
+        }
+        
+        .card-demo .card-icon {
+            background: var(--gradient-warning);
+            -webkit-background-clip: text;
+            background-clip: text;
+        }
+        
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            margin: 0;
+            padding: 12px 20px; /* Más compacto */
+            text-align: center;
+            background: var(--dark);
+            color: #ccc;
+            font-size: 0.85rem; /* Reducido */
+            z-index: 100;
+            box-sizing: border-box;
+            height: 50px; /* Altura más compacta */
+            flex-shrink: 0;
+        }
+        
+        .pulse {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.03); } /* Reducido */
+            100% { transform: scale(1); }
+        }
+        
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+        
+        @keyframes floating {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); } /* Reducido */
+            100% { transform: translateY(0px); }
+        }
+        
+        .badge-new {
+            position: absolute;
+            top: 12px; /* Ajustado */
+            right: 12px; /* Ajustado */
+            background: var(--warning);
+            color: white;
+            padding: 4px 8px; /* Reducido */
+            border-radius: 15px;
+            font-size: 0.65rem; /* Reducido */
+            font-weight: bold;
+        }
+        
+        /* Ajustes de espaciado */
+        .card h4 {
+            font-size: 1.1rem; /* Reducido */
+            margin-bottom: 0.5rem;
+        }
+        
+        .card p.text-muted {
+            font-size: 0.9rem; /* Reducido */
+            line-height: 1.4;
+        }
+        
+        /* Sección de características */
+        .card .fa-2x {
+            font-size: 1.8rem; /* Reducido */
+        }
+        
+        .card h5 {
+            font-size: 1rem; /* Reducido */
+        }
+        
+        .card .small {
+            font-size: 0.8rem; /* Reducido */
+        }
+        
+        /* Asegurar que todo quepa sin scroll */
+        @media (max-width: 768px) {
+            header {
+                padding: 1rem;
+                font-size: 1.2rem;
+            }
+            
+            .footer {
+                padding: 10px 15px;
+                height: 45px;
+                font-size: 0.8rem;
+            }
+            
+            main.container {
+                padding-top: 1rem;
+                padding-bottom: 1rem;
+            }
+            
+            .card-icon {
+                font-size: 2.5rem;
+            }
+            
+            .card {
+                padding: 1.5rem !important;
+            }
+        }
+        
+        @media (max-height: 800px) {
+            .card-icon {
+                font-size: 2.5rem;
+            }
+            
+            .card {
+                padding: 1.25rem !important;
+            }
+            
+            .footer {
+                height: 45px;
+                padding: 10px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="floating">
+        🚗 Aplicación IoT - Control de Carrito Inteligente
+    </div>
+</header>
+
+<main class="container py-3">
+    <div class="row justify-content-center g-3">
+        <!-- CONTROL -->
+        <div class="col-md-4">
+            <a class="text-decoration-none" href="./pages/control.html">
+                <div class="card card-control p-3 text-center h-100 pulse">
+                    <div class="card-icon">
+                        <i class="fas fa-gamepad"></i>
+                    </div>
+                    <h4 class="fw-bold text-primary">Control Manual</h4>
+                    <p class="text-muted mb-0">Movimientos, botones físicos, simulación de obstáculos</p>
+                    <div class="mt-2">
+                        <span class="badge bg-primary">Interactivo</span>
+                        <span class="badge bg-secondary">Tiempo Real</span>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- MONITOREO -->
+        <div class="col-md-4">
+            <a class="text-decoration-none" href="./pages/monitor.html">
+                <div class="card card-monitor p-3 text-center h-100">
+                    <div class="card-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h4 class="fw-bold text-success">Monitoreo</h4>
+                    <p class="text-muted mb-0">Movimientos y obstáculos en tiempo real</p>
+                    <div class="mt-2">
+                        <span class="badge bg-success">Gráficas</span>
+                        <span class="badge bg-info">Live Data</span>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- DEMO -->
+        <div class="col-md-4">
+            <a class="text-decoration-none" href="./pages/demo.html">
+                <div class="card card-demo p-3 text-center h-100">
+                    <span class="badge-new">NUEVO</span>
+                    <div class="card-icon">
+                        <i class="fas fa-robot"></i>
+                    </div>
+                    <h4 class="fw-bold text-warning">Modo DEMO</h4>
+                    <p class="text-muted mb-0">Programar y ejecutar secuencias automáticas</p>
+                    <div class="mt-2">
+                        <span class="badge bg-warning text-dark">Automatización</span>
+                        <span class="badge bg-danger">Avanzado</span>
+                    </div>
+                </div>
+            </a>
+        </div>
+    </div>
+    
+    <!-- Sección de información adicional -->
+    <div class="row mt-3">
+        <div class="col-12">
+            <div class="card p-3 text-center">
+                <h3 class="fw-bold mb-2">Características Principales</h3>
+                <div class="row">
+                    <div class="col-md-3 mb-2">
+                        <i class="fas fa-bolt text-primary mb-1"></i>
+                        <h5>Control en Tiempo Real</h5>
+                        <p class="small text-muted">Comandos instantáneos al dispositivo IoT</p>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <i class="fas fa-shield-alt text-success mb-1"></i>
+                        <h5>Detección de Obstáculos</h5>
+                        <p class="small text-muted">Sistema de seguridad integrado</p>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <i class="fas fa-project-diagram text-warning mb-1"></i>
+                        <h5>Programación Avanzada</h5>
+                        <p class="small text-muted">Secuencias automatizadas personalizables</p>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                        <i class="fas fa-chart-bar text-info mb-1"></i>
+                        <h5>Análisis de Datos</h5>
+                        <p class="small text-muted">Visualización de métricas en tiempo real</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div class="footer">
+    Desarrollado por Pedro Daniel Molina Monroy | 2025
+</div>
+
+</body>
+</html>
